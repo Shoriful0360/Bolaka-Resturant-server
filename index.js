@@ -85,6 +85,16 @@ app.post('/payment',async(req,res)=>{
   const deletResult=await addToCardCollection.deleteMany(query)
   res.send({result,deletResult})
 })
+// payment history
+app.get('/payment_history/:email',tokenVerify,async(req,res)=>{
+const email=req.params.email;
+const query={email}
+if(email!==req.decoded.email){
+  return res.status(403).send('Forbidden')
+}
+const result=await paymentCollection.find(query).toArray()
+res.send(result)
+})
 
 // verify admin
 
