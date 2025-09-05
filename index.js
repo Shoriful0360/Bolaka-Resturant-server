@@ -42,7 +42,7 @@ async function run() {
       res.send({ token })
     })
 
-    // middle 
+    // middle ware
     const tokenVerify = (req, res, next) => {
 
       if (!req.headers.authorization) {
@@ -160,27 +160,23 @@ async function run() {
       const user = req.body;
       const query = { email: user?.email }
       const isExist = await usersCollections.findOne(query)
-
       if (isExist) {
         return res.send({ message: 'All ready have an account' })
       }
+   
       const result = await usersCollections.insertOne(user)
       res.send(result)
     })
 
     // admin check
-    app.get('/user/admin/:email', tokenVerify, async (req, res) => {
+    app.get('/user/role/:email', tokenVerify, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: 'unauthrized access' })
       }
       const query = { email }
       const user = await usersCollections.findOne(query);
-      let admin = false;
-      if (user) {
-        admin = user?.role === "Admin"
-      }
-      res.send({ admin })
+      res.send(user)
     })
 
     // get all user
@@ -200,7 +196,7 @@ async function run() {
     })
 
     // patch user
-    // todo: adminVerify
+   
     app.patch('/users/admin/:id', tokenVerify, adminVerify, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
@@ -213,7 +209,12 @@ async function run() {
       res.send(result)
     })
 
-
+// insert review 
+app.post('/review',async(req,res)=>{
+  const data=req.body;
+  const result=await reviewCollection.insertOne(data)
+  res.send(result)
+})
     // get all review data from sever
     app.get('/review', async (req, res) => {
       const result = await reviewCollection.find().toArray()
