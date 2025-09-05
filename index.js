@@ -35,6 +35,7 @@ async function run() {
     const usersCollections = client.db('Bolaka-resturant').collection('users')
     const addToCardCollection = client.db('Bolaka-resturant').collection('addToCart')
     const paymentCollection = client.db('Bolaka-resturant').collection('payment')
+    const tableBookingCollection = client.db('Bolaka-resturant').collection('booking')
     // jwt related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
@@ -216,7 +217,7 @@ app.post('/review',async(req,res)=>{
   res.send(result)
 })
     // get all review data from sever
-    app.get('/review', async (req, res) => {
+    app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray()
       res.send(result)
     })
@@ -290,6 +291,13 @@ app.post('/review',async(req,res)=>{
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await addToCardCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    // table booking
+    app.post('/table_booking',async(req,res)=>{
+      const data=req.body;
+      const result=await tableBookingCollection.insertOne(data)
       res.send(result)
     })
 
