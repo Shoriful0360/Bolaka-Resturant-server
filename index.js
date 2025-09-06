@@ -317,6 +317,14 @@ app.post('/review',async(req,res)=>{
       }
     })
 
+    app.patch('/booking/:id',async(req,res)=>{
+      const id=req.params.id;
+      const {status}=req.body;
+      const query={_id: new ObjectId(id)}
+      const result=await tableBookingCollection.updateOne(query,{$set:{status}})
+      res.send(result)
+    })
+
     // admin states
     app.get('/admin_stats', tokenVerify, adminVerify, async (req, res) => {
       const users = await usersCollections.estimatedDocumentCount();
