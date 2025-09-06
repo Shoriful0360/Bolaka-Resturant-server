@@ -301,6 +301,22 @@ app.post('/review',async(req,res)=>{
       res.send(result)
     })
 
+    // get booking by email
+    app.get('/booking/:email',async(req,res)=>{
+      const email=req.params.email;
+      const {status}=req.query;
+      try {
+        let query={email:email}
+        if(status){
+          query.status=status
+        }
+        const result=await tableBookingCollection.find(query).toArray()
+        res.send(result)
+      } catch (error) {
+        res.status(500).send({error:error.message})
+      }
+    })
+
     // admin states
     app.get('/admin_stats', tokenVerify, adminVerify, async (req, res) => {
       const users = await usersCollections.estimatedDocumentCount();
