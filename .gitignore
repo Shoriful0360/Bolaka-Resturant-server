@@ -1,1 +1,15 @@
 .vercel
+Store ID: desik68bbcc39ce835
+Store Password (API/Secret Key): desik68bbcc39ce835@ssl
+
+
+Merchant Panel URL: https://sandbox.sslcommerz.com/manage/ (Credential as you inputted in the time of registration)
+
+
+ 
+Store name: testdesikn4kc
+Registered URL: www.desikhaddo.xyz
+Session API to generate transaction: https://sandbox.sslcommerz.com/gwprocess/v3/api.php
+Validation API: https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?wsdl
+Validation API (Web Service) name: https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php
+ 

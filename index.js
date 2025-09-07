@@ -5,15 +5,17 @@ const jwt = require('jsonwebtoken')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const app = express()
 const port = process.env.PORT || 5000
-
+const { default: axios } = require('axios')
 // middleware
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded())
 
 
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const uri = `mongodb+srv://${process.env.USER_KEY}:${process.env.PASSWORD_KEY}@cluster0.onkli.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -96,8 +98,84 @@ async function run() {
       const result = await paymentCollection.find(query).toArray()
       res.send(result)
     })
+// ssl payment method
+app.post('/ssl-create-payment',async(req,res)=>{
+  const payment=req.body;
+  const tnxid=new ObjectId().toString()
+   const initiate = {
+        store_id:"desik68bbcc39ce835",
+        store_passwd:"desik68bbcc39ce835@ssl",
+        total_amount: payment?.price,
+        currency: 'BDT',
+        tran_id: tnxid,
+        success_url: 'http://localhost:5000/success-payment',
+        fail_url: 'http://localhost:5173/fail',
+        cancel_url: 'http://localhost:5173/cancel',
+        ipn_url: 'http://localhost:5000/ipn-success-payment',
+        shipping_method: 'Courier',
+        product_name: 'Computer.',
+        product_category: 'Electronic',
+        product_profile: 'general',
+        cus_name: payment.name,
+        cus_email: payment?.email,
+        cus_add1: 'Dhaka',
+        cus_add2: 'Dhaka',
+        cus_city: 'Dhaka',
+        cus_state: 'Dhaka',
+        cus_postcode: '1000',
+        cus_country: 'Bangladesh',
+        cus_phone: '01711111111',
+        cus_fax: '01711111111',
+        ship_name: 'Customer Name',
+        ship_add1: 'Dhaka',
+        ship_add2: 'Dhaka',
+        ship_city: 'Dhaka',
+        ship_state: 'Dhaka',
+        ship_postcode: 1000,
+        ship_country: 'Bangladesh',
+    };
+    const iniResponse=await axios({
+      url:"https://sandbox.sslcommerz.com/gwprocess/v4/api.php",
+      method:"POST",
+      data:initiate,
+      headers:{
+        "Content-Type":"application/x-www-form-urlencoded"
+      },
+    })
 
+    const saveData=await paymentCollection.insertOne({...payment,transactionId:tnxid})
+    const gatewayUrl=iniResponse?.data?.GatewayPageURL
+     res.send({gatewayUrl})
+})
 
+// success payment
+app.post('/success-payment',async(req,res)=>{
+  const paymentSuccess=req.body;
+
+  const {data}=await axios.get(`https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${paymentSuccess?.val_id}&store_id=desik68bbcc39ce835&store_passwd=desik68bbcc39ce835@ssl&format=json`)
+
+  // validation payment
+   if(data.status !=="VALID"){
+    return res.send({message:"Invalid payment"})
+   }
+  //  update payment
+  const updatePayment=await paymentCollection.updateOne(
+    {transactionId:data.tran_id},
+  {
+    $set:{
+      status:"success"
+    }
+  })
+
+  const payment=await paymentCollection.findOne({transactionId:data.tran_id})
+  const query={_id:{
+    $in:payment.cartIds?.map((id)=>new ObjectId(id))
+  }}
+  await addToCardCollection.deleteMany(query)
+
+  res.redirect("http://localhost:5173/dashboard/payment_history")
+
+})
     // separate menu  from payment menuId 
 
     app.get('/order_stats', async (req, res) => {
